@@ -1,30 +1,35 @@
 module GitDiffParser
-  # Parsed line
-  class Line
-    attr_reader :content, :number, :patch_position
-    # @!attribute [r] content
-    #   @return [String] content
-    # @!attribute [r] number
-    #   @return [Integer] line number
-    # @!attribute [r] patch_position
-    #   @return [Integer] line patch position
+    # Parsed line
+    class Line
+        attr_reader :content, :number, :patch_position
+        # @!attribute [r] content
+        #   @return [String] content
+        # @!attribute [r] number
+        #   @return [Integer] line number
+        # @!attribute [r] patch_position
+        #   @return [Integer] line patch position
 
-    # @param params [Hash] required params
-    # @option params [Integer] :number line number (required)
-    # @option params [String] :content content (required)
-    # @option params [Integer] :patch_position patch position (required)
-    def initialize(params)
-      raise(ArgumentError('number is required')) unless params[:number]
-      raise(ArgumentError('content is required')) unless params[:content]
-      raise(ArgumentError('patch_position is required')) unless params[:patch_position]
-      @number = params[:number]
-      @content = params[:content]
-      @patch_position = params[:patch_position]
-    end
+        # @param params [Hash] required params
+        # @option params [Integer] :number line number (required)
+        # @option params [String] :content content (required)
+        # @option params [Integer] :patch_position patch position (required)
+        def initialize(params)
+            raise(ArgumentError('number is required')) unless params[:number]
+            raise(ArgumentError('content is required')) unless params[:content]
+            raise(ArgumentError('patch_position is required')) unless params[:patch_position]
+            @number = params[:number]
+            @content = params[:content]
+            @patch_position = params[:patch_position]
+        end
 
-    # @return [Boolean] true if line changed
-    def changed?
-      true
+        # @return [Boolean] true if line changed
+        def changed?
+            true
+        end
+
+        # @return [String] 返回每一行的内容，不包含 diff 里面的 +/- 符号
+        def plain_content
+            content[1..-1]
+        end
     end
-  end
 end
