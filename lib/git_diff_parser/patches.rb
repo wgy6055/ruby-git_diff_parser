@@ -15,6 +15,7 @@ module GitDiffParser
             original_file_name = ''
             file_name = ''
             binary = false
+            type = :modified
             patch = []
             lines = contents.lines
             line_count = lines.count
@@ -23,11 +24,12 @@ module GitDiffParser
                 case parsed.scrub_string(line.chomp)
                 when /^diff/
                     unless patch.empty? and original_file_name.empty? and file_name.empty?
-                        parsed << Patch.new(patch.join("\n") + "\n", file: file_name, original_file: original_file_name, binary: binary)
+                        parsed << Patch.new(patch.join("\n") + "\n", file: file_name, original_file: original_file_name, binary: binary, type: type)
                         patch.clear
                         file_name = ''
                         original_file_name = ''
                         binary = false
+                        type = :modified
                     end
                     body = false
                 when %r{^\-\-\- a/(?<file_name>.*)}
@@ -38,16 +40,22 @@ module GitDiffParser
                     body = true
                 when %r{^rename from (?<file_name>.*)}
                     original_file_name = Regexp.last_match[:file_name].rstrip
+                    type = :renamed
                 when %r{^rename to (?<file_name>.*)}
                     file_name = Regexp.last_match[:file_name].rstrip
+                when '--- /dev/null'
+                    type = :added
+                when '+++ /dev/null'
+                    type = :deleted
                 when /^(?<body>[\ @\+\-\\].*)/
                     patch << Regexp.last_match[:body] if body
                     if !patch.empty? && body && line_count == count + 1
-                        parsed << Patch.new(patch.join("\n") + "\n", file: file_name, original_file: original_file_name, binary: binary)
+                        parsed << Patch.new(patch.join("\n") + "\n", file: file_name, original_file: original_file_name, binary: binary, type: type)
                         patch.clear
                         file_name = ''
                         original_file_name = ''
                         binary = false
+                        type = :modified
                     end
                 when %r{^Binary files (?<old_file_name>.*) and (?<new_file_name>.*) differ$}
                     binary = true
@@ -57,11 +65,12 @@ module GitDiffParser
                 end
             end
             unless original_file_name.empty? and file_name.empty?
-                parsed << Patch.new(patch.join("\n") + "\n", file: file_name, original_file: original_file_name, binary: binary)
+                parsed << Patch.new(patch.join("\n") + "\n", file: file_name, original_file: original_file_name, binary: binary, type: type)
                 patch.clear
                 file_name = ''
                 original_file_name = ''
                 binary = false
+                type = :modified
             end
             parsed
         end

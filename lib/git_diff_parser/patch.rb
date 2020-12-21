@@ -7,7 +7,7 @@ module GitDiffParser
         NOT_REMOVED_LINE = /^[^-]/
         UNCHANGED_LINE = /^\s/
 
-        attr_accessor :file, :original_file, :body, :secure_hash, :binary
+        attr_accessor :file, :original_file, :body, :secure_hash, :binary, :type
         # @!attribute [rw] file
         #   @return [String, nil] file path or nil
         # @!attribute [rw] body
@@ -49,6 +49,8 @@ module GitDiffParser
         # @option options [String] 'secure_hash' target sha1 hash
         # @option options [Boolean] :binary binary file?
         # @option options [Boolean] 'binary' binary file?
+        # @option options [String] :type patch type (:modified, :added, :deleted, :renamed)
+        # @option options [String] 'type' patch type (:modified, :added, :deleted, :renamed)
         #
         # @see https://developer.github.com/v3/repos/commits/#get-a-single-commit
         # @see https://developer.github.com/v3/pulls/#list-pull-requests-files
@@ -58,6 +60,7 @@ module GitDiffParser
             @secure_hash = options[:secure_hash] || options['secure_hash'] if options[:secure_hash] || options['secure_hash']
             @original_file = options[:original_file] || options['original_file'] if options[:original_file] || options['original_file']
             @binary = options[:binary]
+            @type = options[:type] || options['type'] if options[:type] || options['type']
         end
 
         # @return [Array<Line>] changed lines
@@ -129,7 +132,22 @@ module GitDiffParser
 
         # 是否被重命名
         def renamed?
-            (not @original_file.empty?) and @original_file != @file
+            @type == :renamed
+        end
+
+        # 是否为新增文件
+        def added?
+            @type == :added
+        end
+
+        # 是否为删除文件
+        def deleted?
+            @type == :deleted
+        end
+
+        # 是否为修改文件
+        def modified?
+            @type == :modified
         end
 
         # 是否为二进制文件
